@@ -1,5 +1,4 @@
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -7,28 +6,133 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        #editor {
+            border: 1px solid #ccc;
+            min-height: 200px;
+            padding: 10px;
+            margin-top: 20px;
+        }
+
+        #toolbar {
+            margin-top: 10px;
+        }
+
+        button {
+            margin-right: 5px;
+        }
+    </style>
     <title>Text Editor - [Your Student Number]</title>
 </head>
 
 <body>
 
-    <!--  Remove this div once you are started -->
+    <!-- Container for Bootstrap styling -->
     <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <h1>Start Your Work Here!</h1>
-                <hr>
-            </div>
+
+        <!-- Editor -->
+        <div id="editor" contenteditable="true"></div>
+
+        <!-- Toolbar -->
+        <div id="toolbar" class="btn-group">
+            <button class="btn btn-light" onclick="bold()"><strong>B</strong></button>
+            <button class="btn btn-light" onclick="underline()"><u>U</u></button>
+            <button class="btn btn-light" onclick="italic()"><i>I</i></button>
+            <input type="color" id="colorPicker" onchange="changeFontColor()">
+            <select class="custom-select" onchange="changeTextAlignment()">
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+                <option value="center">Center</option>
+                <option value="justify">Justify</option>
+            </select>
+            <button class="btn btn-light" onclick="undo()"><i class="fa fa-undo"></i></button>
+            <button class="btn btn-light" onclick="redo()"><i class="fa fa-redo"></i></button>
         </div>
     </div>
-    
-    
+
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+    <script>
+        function bold() {
+            document.execCommand("bold", false, null);
+            saveState();
+        }
+
+        function underline() {
+            document.execCommand("underline", false, null);
+            saveState();
+        }
+
+        function italic() {
+            document.execCommand("italic", false, null);
+            saveState();
+        }
+
+        function changeFontColor() {
+            document.execCommand("foreColor", false, colorPicker.value);
+            saveState();
+        }
+
+        function changeTextAlignment() {
+            var alignment = event.target.value;
+            document.execCommand("justify" + alignment, false, null);
+            saveState();
+        }
+
+        function undo() {
+            if (undoStack.length > 1) {
+                redoStack.push(undoStack.pop());
+                editor.innerHTML = undoStack[undoStack.length - 1];
+                updateUndoRedoButtons();
+            }
+        }
+
+        function redo() {
+            if (redoStack.length > 0) {
+                undoStack.push(redoStack.pop());
+                editor.innerHTML = undoStack[undoStack.length - 1];
+                updateUndoRedoButtons();
+            }
+        }
+
+        function saveState() {
+            undoStack.push(editor.innerHTML);
+            redoStack = [];
+            updateUndoRedoButtons();
+        }
+
+        function updateUndoRedoButtons() {
+            document.querySelector("[onclick='undo()']").disabled = undoStack.length === 0;
+            document.querySelector("[onclick='redo()']").disabled = redoStack.length === 0;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            var editor = document.getElementById("editor");
+            var colorPicker = document.getElementById("colorPicker");
+            var undoStack = [];
+            var redoStack = [];
+
+            editor.addEventListener("input", saveState);
+        });
+    </script>
 </body>
-<!-- Author: [Your Name] | [Your Student Number] -->
+
+<!-- Author: [Vindya Ruwanpathirana] | [CT19092] -->
 </html>
